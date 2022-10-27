@@ -38,6 +38,9 @@
 # build dir
 build/
 
+# vscode
+.vscode/
+
 ### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt

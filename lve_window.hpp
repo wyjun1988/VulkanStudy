@@ -5,18 +5,20 @@
 
 #include <string>
 
-namespace vk{
+namespace lve{
 
-    class VkWindow{
+    class LveWindow{
 
         public:
-            VkWindow(int w, int h, std::string name);
-            ~VkWindow();
+            LveWindow(int w, int h, std::string name);
+            ~LveWindow();
 
-            VkWindow(const VkWindow &) = delete;
-            VkWindow &operator = (const VkWindow &) = delete;
+            LveWindow(const LveWindow &) = delete;
+            LveWindow &operator = (const LveWindow &) = delete;
 
             bool shouldClose(){return glfwWindowShouldClose(window);};
+
+            void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
         private:
 
             void initWindow();

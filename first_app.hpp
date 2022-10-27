@@ -1,9 +1,10 @@
 #pragma once
 
-#include "vk_window.hpp"
-#include "vk_pipline.hpp"
+#include "lve_window.hpp"
+#include "lve_pipeline.hpp"
+#include "lve_device.hpp"
 
-namespace vk{
+namespace lve{
     class FirstApp
     {
     public:
@@ -13,8 +14,15 @@ namespace vk{
 
         void run();
     private:
-        VkWindow vkWindow{WIDTH, HEIGHT, "hello vulkan~"};
-        VkPipeline vkPipeline{"shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv"};
+        LveWindow lveWindow{WIDTH, HEIGHT, "hello vulkan~"};
+        LveDevice lveDevice{lveWindow};
+        LvePipeline lvePipeline{
+            lveDevice, 
+            "shaders/simple_shader.vert.spv", 
+            "shaders/simple_shader.frag.spv",
+            LvePipeline::defaultPipelineConfigInfo(WIDTH, HEIGHT)
+            };
+
 
     };
     

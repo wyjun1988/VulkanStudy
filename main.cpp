@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 int main(){
-    vk::FirstApp app{};
+    lve::FirstApp app{};
 
     try{
         app.run();
