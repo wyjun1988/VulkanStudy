@@ -47,7 +47,10 @@ namespace lve{
         }
     }
     void FirstApp::createPipeline(){
-        auto pipelineConfig = LvePipeline::defaultPipelineConfigInfo(lveSwapChain->width(), lveSwapChain->height());
+        assert(lveSwapChain != nullptr && "Cannot create pipeline before swapchain");
+        assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+
+        auto pipelineConfig = LvePipeline::defaultPipelineConfigInfo();
         pipelineConfig.renderPass = lveSwapChain->getRenderPass();
         pipelineConfig.pipelineLayout = pipelineLayout;
         lvePipeline = std::make_unique<LvePipeline>(
@@ -63,8 +66,17 @@ namespace lve{
         }
 
         vkDeviceWaitIdle(lveDevice.device());
-        lveSwapChain = nullptr;
-        lveSwapChain = std::make_unique<LveSwapChain>(lveDevice, extent);
+        
+        if(lveSwapChain == nullptr){
+            lveSwapChain = std::make_unique<LveSwapChain>(lveDevice, extent);
+        } else{
+            lveSwapChain = std::make_unique<LveSwapChain>(lveDevice, extent, std::move(lveSwapChain));
+            if(lveSwapChain->imageCount() != commandBuffers.size()){
+                freeCommandBuffers();
+                createCommandBuffers();
+            }
+        }
+        //if render pass compatible do nothing else 
         createPipeline();
     }
 
@@ -80,6 +92,11 @@ namespace lve{
         if(vkAllocateCommandBuffers(lveDevice.device(), &allocInfo, commandBuffers.data()) != VK_SUCCESS){
             throw std::runtime_error("failed to allocate command buffer");
         }
+    }
+
+    void FirstApp::freeCommandBuffers(){
+        vkFreeCommandBuffers(lveDevice.device(), lveDevice.getCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+        commandBuffers.clear();
     }
 
     void FirstApp::recordCommandBuffer(int imageIndex){
@@ -105,6 +122,17 @@ namespace lve{
             renderPassInfo.pClearValues = clearValues.data();
 
             vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            VkViewport viewport{};
+            viewport.x = 0.f;
+            viewport.y = 0.f;
+            viewport.width = static_cast<float>(lveSwapChain->getSwapChainExtent().width);
+            viewport.height = static_cast<float>(lveSwapChain->getSwapChainExtent().height);
+            viewport.minDepth = 0.f;
+            viewport.maxDepth = 1.f;
+            VkRect2D scissor{{0, 0 }, lveSwapChain->getSwapChainExtent()};
+            vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+            vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
             lvePipeline->bind(commandBuffers[imageIndex]);
             lveModel->bind(commandBuffers[imageIndex]);
